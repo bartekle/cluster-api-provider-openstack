@@ -92,6 +92,7 @@ var (
 	caCertsPath                 string
 	showVersion                 bool
 	scopeCacheMaxSize           int
+	transportCacheMaxSize       int
 	logOptions                  = logs.NewOptions()
 )
 
@@ -166,6 +167,7 @@ func InitFlags(fs *pflag.FlagSet) {
 
 	fs.IntVar(&scopeCacheMaxSize, "scope-cache-max-size", 10, "The maximum credentials count the operator should keep in cache. Setting this value to 0 means no cache.")
 
+	fs.IntVar(&transportCacheMaxSize, "transport-cache-max-size", 10, "The maximum number of distinct TLS trust configurations (CA bundle + verify mode) whose connection pools are kept warm. Cannot be disabled; values below 1 are ignored.")
 	fs.BoolVar(&showVersion, "version", false, "Show current version and exit.")
 }
 
@@ -294,7 +296,7 @@ func setupChecks(mgr ctrl.Manager) {
 }
 
 func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
-	scopeFactory := scope.NewFactory(scopeCacheMaxSize)
+	scopeFactory := scope.NewFactory(scopeCacheMaxSize, transportCacheMaxSize)
 
 	if err := (&controllers.OpenStackClusterReconciler{
 		Client:           mgr.GetClient(),
